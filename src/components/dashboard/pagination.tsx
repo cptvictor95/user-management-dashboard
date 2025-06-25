@@ -1,93 +1,62 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  onPrevious: () => void;
   onNext: () => void;
+  onPrevious: () => void;
 }
 
 export const Pagination = ({
   currentPage,
   totalPages,
   onPageChange,
-  onPrevious,
   onNext,
+  onPrevious,
 }: PaginationProps) => {
-  const getVisiblePages = () => {
-    const delta = 2;
-    const range = [];
-    const rangeWithDots = [];
+  const canGoPrevious = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
 
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
     }
-
-    if (currentPage - delta > 2) {
-      rangeWithDots.push(1, "...");
-    } else {
-      rangeWithDots.push(1);
-    }
-
-    rangeWithDots.push(...range);
-
-    if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push("...", totalPages);
-    } else if (totalPages > 1) {
-      rangeWithDots.push(totalPages);
-    }
-
-    return rangeWithDots;
+    return pages;
   };
-
-  if (totalPages <= 1) {
-    return null;
-  }
-
-  const visiblePages = getVisiblePages();
 
   return (
     <div className="flex items-center justify-center space-x-2">
       <Button
-        onClick={onPrevious}
-        disabled={currentPage === 1}
         variant="outline"
-        size="sm"
+        onClick={onPrevious}
+        disabled={!canGoPrevious}
+        className="px-3 py-2"
       >
         Previous
       </Button>
 
-      {visiblePages.map((page, index) => (
-        <div key={index}>
-          {page === "..." ? (
-            <span className="px-3 py-2 text-gray-500">...</span>
-          ) : (
-            <Button
-              onClick={() => onPageChange(page as number)}
-              variant={currentPage === page ? "default" : "outline"}
-              size="sm"
-              className={
-                currentPage === page
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : ""
-              }
-            >
-              {page}
-            </Button>
-          )}
-        </div>
-      ))}
+      <div className="flex space-x-1">
+        {getPageNumbers().map((pageNumber) => (
+          <Button
+            key={pageNumber}
+            variant={pageNumber === currentPage ? "default" : "outline"}
+            onClick={() => onPageChange(pageNumber)}
+            className="px-3 py-2 min-w-[40px]"
+          >
+            {pageNumber}
+          </Button>
+        ))}
+      </div>
 
       <Button
-        onClick={onNext}
-        disabled={currentPage === totalPages}
         variant="outline"
-        size="sm"
+        onClick={onNext}
+        disabled={!canGoNext}
+        className="px-3 py-2"
       >
         Next
       </Button>

@@ -1,8 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { useDeleteUser } from "@/data/users/hooks";
-import type { User } from "@/data/users/schemas";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +14,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useDeleteUser } from "@/data/users/hooks";
 import { UserFormModal } from "./user-form-modal";
+import type { User } from "@/data/users/schemas";
 
 interface UserCardProps {
   user: User;
@@ -30,37 +32,32 @@ export const UserCard = ({ user }: UserCardProps) => {
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader className="pb-4">
-          <div className="flex items-center space-x-4">
+      <Card className="overflow-hidden transition-shadow hover:shadow-md">
+        <CardHeader className="pb-3">
+          <div className="flex items-center space-x-3">
             <img
               src={user.avatar}
               alt={`${user.first_name} ${user.last_name}`}
-              className="w-16 h-16 rounded-full object-cover"
-              onError={(e) => {
-                e.currentTarget.src = `https://ui-avatars.com/api/?name=${user.first_name}+${user.last_name}&background=random`;
-              }}
+              className="w-12 h-12 rounded-full object-cover"
             />
-            <div>
-              <CardTitle className="text-lg">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 truncate">
                 {user.first_name} {user.last_name}
-              </CardTitle>
-              <p className="text-sm text-gray-600">ID: {user.id}</p>
+              </h3>
+              <p className="text-sm text-gray-500 truncate">{user.email}</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Email</p>
-              <p className="text-sm text-gray-900">{user.email}</p>
-            </div>
 
-            <div className="flex space-x-2 pt-4">
+        <CardContent className="pt-0">
+          <div className="flex flex-col space-y-2">
+            <div className="text-xs text-gray-500">ID: {user.id}</div>
+
+            <div className="flex space-x-2 pt-2">
               <Button
-                onClick={() => setIsEditModalOpen(true)}
                 variant="outline"
                 size="sm"
+                onClick={() => setIsEditModalOpen(true)}
                 className="flex-1"
               >
                 Edit
@@ -69,9 +66,9 @@ export const UserCard = ({ user }: UserCardProps) => {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="destructive"
                     size="sm"
-                    className="flex-1 text-red-600 hover:text-red-700 hover:border-red-600"
+                    className="flex-1"
                     disabled={deleteUserMutation.isPending}
                   >
                     {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
@@ -82,8 +79,7 @@ export const UserCard = ({ user }: UserCardProps) => {
                     <AlertDialogTitle>Delete User</AlertDialogTitle>
                     <AlertDialogDescription>
                       Are you sure you want to delete {user.first_name}{" "}
-                      {user.last_name}? This action cannot be undone and will
-                      permanently remove the user from the system.
+                      {user.last_name}? This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -92,7 +88,7 @@ export const UserCard = ({ user }: UserCardProps) => {
                       onClick={handleDelete}
                       className="bg-red-600 hover:bg-red-700"
                     >
-                      Delete User
+                      Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -102,7 +98,6 @@ export const UserCard = ({ user }: UserCardProps) => {
         </CardContent>
       </Card>
 
-      {/* Edit User Modal */}
       <UserFormModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}

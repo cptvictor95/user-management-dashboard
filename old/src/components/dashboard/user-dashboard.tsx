@@ -147,6 +147,12 @@ export const UserDashboard = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         mode="create"
+        onUserCreated={() => {
+          // Navigate to first page to show the newly created user
+          if (currentPage !== 1) {
+            goToPage(1);
+          }
+        }}
       />
     </div>
   );

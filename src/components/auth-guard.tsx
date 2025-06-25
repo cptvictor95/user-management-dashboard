@@ -1,32 +1,14 @@
-import { useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuth } from "@/data/auth/hooks";
+"use client";
+
+import { useAuth } from "@/data/auth/provider";
 
 interface AuthGuardProps {
   children: React.ReactNode;
   requireAuth?: boolean;
-  redirectTo?: string;
 }
 
-export const AuthGuard = ({
-  children,
-  requireAuth = true,
-  redirectTo,
-}: AuthGuardProps) => {
-  const { data: auth, isLoading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    if (requireAuth && !auth?.isAuthenticated) {
-      // Redirect to sign-in if authentication is required but user is not authenticated
-      router.navigate({ to: redirectTo || "/sign-in" });
-    } else if (!requireAuth && auth?.isAuthenticated) {
-      // Redirect to home if user is authenticated but trying to access auth pages
-      router.navigate({ to: redirectTo || "/" });
-    }
-  }, [auth?.isAuthenticated, isLoading, requireAuth, redirectTo, router]);
+export const AuthGuard = ({ children, requireAuth = true }: AuthGuardProps) => {
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -37,14 +19,26 @@ export const AuthGuard = ({
     );
   }
 
-  // Don't render children until auth check is complete
-  if (requireAuth && !auth?.isAuthenticated) {
-    return null;
+  // If auth is required but user is not authenticated, show loading
+  // (middleware will handle the actual redirect)
+  if (requireAuth && !isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Redirecting...</div>
+      </div>
+    );
   }
 
-  if (!requireAuth && auth?.isAuthenticated) {
-    return null;
+  // If auth is not required but user is authenticated, show loading
+  // (middleware will handle the actual redirect)
+  if (!requireAuth && isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Redirecting...</div>
+      </div>
+    );
   }
 
+  // Render children if auth state matches requirements
   return <>{children}</>;
 };

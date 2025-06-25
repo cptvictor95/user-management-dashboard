@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +27,7 @@ interface UserFormModalProps {
   onClose: () => void;
   mode: "create" | "edit";
   user?: User;
+  onUserCreated?: () => void;
 }
 
 export const UserFormModal = ({
@@ -32,6 +35,7 @@ export const UserFormModal = ({
   onClose,
   mode,
   user,
+  onUserCreated,
 }: UserFormModalProps) => {
   const createUserMutation = useCreateUser();
   const updateUserMutation = useUpdateUser();
@@ -84,10 +88,12 @@ export const UserFormModal = ({
       if (isEdit && user) {
         await updateUserMutation.mutateAsync({
           id: user.id,
-          userData: data as UpdateUserFormData,
+          ...(data as UpdateUserFormData),
         });
       } else {
         await createUserMutation.mutateAsync(data as CreateUserFormData);
+        // Call the callback to navigate to first page after creating user
+        onUserCreated?.();
       }
       onClose();
       reset();
@@ -174,8 +180,8 @@ export const UserFormModal = ({
                   ? "Updating..."
                   : "Creating..."
                 : isEdit
-                  ? "Update User"
-                  : "Create User"}
+                ? "Update User"
+                : "Create User"}
             </Button>
           </DialogFooter>
         </form>
