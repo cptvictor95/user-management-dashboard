@@ -1,4 +1,3 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -13,23 +12,28 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { signInSchema, type SignInFormData } from "@/data/auth/schemas";
-import { useSignIn } from "@/data/auth/hooks";
+import { signUpSchema, type SignUpFormData } from "@/data/auth/schemas";
+import { useSignUp } from "@/data/auth/hooks";
 import { AuthGuard } from "@/components/auth-guard";
+import { Link } from "@tanstack/react-router";
 
-const SignIn = () => {
-  const signInMutation = useSignIn();
+export const SignUp = () => {
+  const signUpMutation = useSignUp();
 
-  const form = useForm<SignInFormData>({
-    resolver: zodResolver(signInSchema),
+  const form = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = (data: SignInFormData) => {
-    signInMutation.mutate(data);
+  const onSubmit = (data: SignUpFormData) => {
+    signUpMutation.mutate({
+      email: data.email,
+      password: data.password,
+    });
   };
 
   return (
@@ -37,7 +41,7 @@ const SignIn = () => {
       <section className="h-screen bg-muted">
         <div className="flex h-full items-center justify-center">
           <div className="flex w-full max-w-sm flex-col items-center gap-y-8 rounded-md border border-muted bg-white px-6 py-12 shadow-md">
-            <h1 className="text-2xl font-semibold">Sign In</h1>
+            <h1 className="text-2xl font-semibold">Sign Up</h1>
 
             <Form {...form}>
               <form
@@ -55,6 +59,7 @@ const SignIn = () => {
                           type="email"
                           placeholder="Enter your email"
                           className="bg-white"
+                          autoComplete="email"
                           {...field}
                         />
                       </FormControl>
@@ -82,29 +87,51 @@ const SignIn = () => {
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Confirm your password"
+                          className="bg-white"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <Button
                   type="submit"
                   className="w-full mt-6"
-                  disabled={signInMutation.isPending}
+                  disabled={signUpMutation.isPending}
                 >
-                  {signInMutation.isPending ? "Signing in..." : "Sign In"}
+                  {signUpMutation.isPending
+                    ? "Creating account..."
+                    : "Create account"}
                 </Button>
 
-                {signInMutation.isError && (
+                {signUpMutation.isError && (
                   <p className="text-sm text-red-600 text-center mt-2">
-                    {signInMutation.error?.message || "Failed to sign in"}
+                    {signUpMutation.error?.message ||
+                      "Failed to create account"}
                   </p>
                 )}
               </form>
             </Form>
 
             <div className="flex justify-center gap-1 text-sm text-muted-foreground">
-              <p>Don't have an account?</p>
+              <p>Already have an account?</p>
               <Link
-                to="/sign-up"
+                to="/sign-in"
                 className="font-medium text-primary hover:underline"
               >
-                Sign up
+                Sign in
               </Link>
             </div>
           </div>
@@ -113,7 +140,3 @@ const SignIn = () => {
     </AuthGuard>
   );
 };
-
-export const Route = createFileRoute("/sign-in")({
-  component: SignIn,
-});
