@@ -17,6 +17,7 @@ import {
 import { useDeleteUser } from "@/data/users/hooks";
 import { UserFormModal } from "./user-form-modal";
 import type { User } from "@/data/users/schemas";
+import Image from "next/image";
 
 interface UserCardProps {
   user: User;
@@ -35,10 +36,12 @@ export const UserCard = ({ user }: UserCardProps) => {
       <Card className="overflow-hidden transition-shadow hover:shadow-md">
         <CardHeader className="pb-3">
           <div className="flex items-center space-x-3">
-            <img
+            <Image
               src={user.avatar}
               alt={`${user.first_name} ${user.last_name}`}
               className="w-12 h-12 rounded-full object-cover"
+              width={48}
+              height={48}
             />
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold text-gray-900 truncate">
@@ -84,10 +87,7 @@ export const UserCard = ({ user }: UserCardProps) => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
+                    <AlertDialogAction onClick={handleDelete}>
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>

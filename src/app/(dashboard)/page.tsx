@@ -117,10 +117,7 @@ export default function DashboardPage() {
           {/* Actions */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">Users</h2>
-            <Button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+            <Button onClick={() => setIsCreateModalOpen(true)}>
               Add New User
             </Button>
           </div>
@@ -138,7 +135,7 @@ export default function DashboardPage() {
               <div className="text-gray-500 text-lg">No users found</div>
               <Button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="mt-4 bg-blue-600 hover:bg-blue-700"
+                className="mt-4"
               >
                 Add First User
               </Button>

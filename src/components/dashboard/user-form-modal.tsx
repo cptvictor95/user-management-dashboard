@@ -170,11 +170,7 @@ export const UserFormModal = ({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? isEdit
                   ? "Updating..."

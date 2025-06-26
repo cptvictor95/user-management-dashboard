@@ -273,12 +273,16 @@ export const useDeleteUser = () => {
   return useMutation({
     mutationFn: deleteUser,
     onSuccess: (_, deletedUserId) => {
-      // Remove the user from all cached pages
+      // Collect all users from all cached pages
       const queryCache = queryClient.getQueryCache();
       const queries = queryCache.findAll({
         queryKey: ["users"],
         type: "active",
       });
+
+      // Get all users from all pages and remove the deleted one
+      const allUsers: User[] = [];
+      let totalCount = 0;
 
       queries.forEach((query) => {
         if (
@@ -287,15 +291,58 @@ export const useDeleteUser = () => {
         ) {
           const usersData = query.state.data as UsersListResponse | undefined;
           if (usersData) {
-            const filteredUsers = usersData.data.filter(
+            // Add users from this page, excluding the deleted one
+            const pageUsers = usersData.data.filter(
               (user) => user.id !== deletedUserId
             );
-            const updatedData = {
-              ...usersData,
-              data: filteredUsers,
-              total: Math.max(0, usersData.total - 1),
-            };
-            queryClient.setQueryData(query.queryKey, updatedData);
+            allUsers.push(...pageUsers);
+            totalCount = usersData.total; // Get the total count
+          }
+        }
+      });
+
+      // Remove duplicates (in case user appears on multiple pages due to optimistic updates)
+      const uniqueUsers = allUsers.filter(
+        (user, index, arr) => arr.findIndex((u) => u.id === user.id) === index
+      );
+
+      // Calculate new totals
+      const newTotal = Math.max(0, totalCount - 1);
+      const newTotalPages = Math.ceil(newTotal / 6);
+
+      // Redistribute users across pages (6 per page)
+      const redistributedPages: { [pageNum: number]: User[] } = {};
+
+      for (let i = 0; i < uniqueUsers.length; i++) {
+        const pageNum = Math.floor(i / 6) + 1;
+        if (!redistributedPages[pageNum]) {
+          redistributedPages[pageNum] = [];
+        }
+        redistributedPages[pageNum].push(uniqueUsers[i]);
+      }
+
+      // Update all cached pages with redistributed data
+      queries.forEach((query) => {
+        if (
+          query.queryKey[0] === "users" &&
+          typeof query.queryKey[1] === "number"
+        ) {
+          const pageNum = query.queryKey[1] as number;
+          const usersData = query.state.data as UsersListResponse | undefined;
+
+          if (usersData) {
+            // If this page should still exist with redistributed users
+            if (pageNum <= newTotalPages && redistributedPages[pageNum]) {
+              queryClient.setQueryData<UsersListResponse>(["users", pageNum], {
+                ...usersData,
+                data: redistributedPages[pageNum],
+                total: newTotal,
+                total_pages: newTotalPages,
+              });
+            } else {
+              // Remove pages that no longer should exist
+              queryClient.removeQueries({ queryKey: ["users", pageNum] });
+            }
           }
         }
       });
@@ -325,10 +372,18 @@ export const usePagination = (initialPage: number = 1) => {
     setCurrentPage((prev) => Math.max(1, prev - 1));
   };
 
+  // Function to adjust current page if it no longer exists
+  const adjustPageIfNeeded = (totalPages: number) => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  };
+
   return {
     currentPage,
     goToPage,
     nextPage,
     prevPage,
+    adjustPageIfNeeded,
   };
 };

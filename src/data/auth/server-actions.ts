@@ -11,7 +11,6 @@ interface AuthSession {
   };
 }
 
-// Server action to save auth session
 export async function saveAuthSession(session: AuthSession) {
   const cookieStore = await cookies();
 
@@ -22,12 +21,11 @@ export async function saveAuthSession(session: AuthSession) {
     timestamp: new Date().toISOString(),
   });
 
-  // Set cookies with proper settings
   cookieStore.set("auth_token", session.token, {
-    httpOnly: false, // Allow client access for API calls
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 1 week
+    maxAge: 60 * 60 * 24 * 7,
     path: "/",
   });
 
@@ -50,7 +48,6 @@ export async function saveAuthSession(session: AuthSession) {
   }
 }
 
-// Server action to get auth session
 export async function getAuthSession(): Promise<AuthSession | null> {
   const cookieStore = await cookies();
 
@@ -78,7 +75,6 @@ export async function getAuthSession(): Promise<AuthSession | null> {
   };
 }
 
-// Server action to clear auth session
 export async function clearAuthSession() {
   const cookieStore = await cookies();
 
@@ -89,7 +85,6 @@ export async function clearAuthSession() {
   cookieStore.delete("user_profile");
 }
 
-// Server action to check if user is authenticated
 export async function isAuthenticated(): Promise<boolean> {
   const session = await getAuthSession();
   return !!session;
