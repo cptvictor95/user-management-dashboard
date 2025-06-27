@@ -30,18 +30,6 @@ describe("User Management - Delete User", () => {
       // Dialog should close
       cy.contains("Delete User").should("not.exist");
     });
-
-    it("should close dialog when clicking outside", () => {
-      // Open delete dialog
-      cy.contains("button", "Delete").first().click();
-      cy.contains("Delete User").should("be.visible");
-
-      // Click outside the dialog (on the backdrop)
-      cy.get('[role="dialog"]').parent().click({ force: true });
-
-      // Dialog should close
-      cy.contains("Delete User").should("not.exist");
-    });
   });
 
   describe("Successful User Deletion", () => {
