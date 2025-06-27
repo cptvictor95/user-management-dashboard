@@ -1,0 +1,106 @@
+/// <reference types="cypress" />
+// ***********************************************
+// This example commands.ts shows you how to
+// create various custom commands and overwrite
+// existing commands.
+//
+// For more comprehensive examples of custom
+// commands please read more here:
+// https://on.cypress.io/custom-commands
+// ***********************************************
+//
+//
+// -- This is a parent command --
+// Cypress.Commands.add('login', (email, password) => { ... })
+//
+//
+// -- This is a child command --
+// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
+//
+//
+// -- This is a dual command --
+// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
+//
+//
+// -- This will overwrite an existing command --
+// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+//
+// declare global {
+//   namespace Cypress {
+//     interface Chainable {
+//       login(email: string, password: string): Chainable<void>
+//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
+//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
+//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
+//     }
+//   }
+// }
+
+// Custom command for login
+Cypress.Commands.add(
+  "login",
+  (email = "eve.holt@reqres.in", password = "cityslicka") => {
+    cy.session([email, password], () => {
+      cy.visit("/sign-in");
+      cy.get('input[type="email"]').type(email);
+      cy.get('input[type="password"]').type(password);
+      cy.get('button[type="submit"]').click();
+
+      // Wait for successful login and redirect
+      cy.url().should("eq", Cypress.config().baseUrl + "/");
+      cy.contains("User Management Dashboard").should("be.visible");
+    });
+  }
+);
+
+// Custom command for logout
+Cypress.Commands.add("logout", () => {
+  cy.visit("/");
+  cy.contains("Sign Out").click();
+  cy.url().should("include", "/sign-in");
+});
+
+// Custom command to check if user is authenticated
+Cypress.Commands.add("shouldBeAuthenticated", () => {
+  cy.visit("/");
+  cy.url().should("not.include", "/sign-in");
+  cy.contains("User Management Dashboard").should("be.visible");
+});
+
+// Custom command to check if user is not authenticated
+Cypress.Commands.add("shouldNotBeAuthenticated", () => {
+  cy.visit("/");
+  cy.url().should("include", "/sign-in");
+});
+
+// Type definitions for custom commands
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      /**
+       * Custom command to login a user
+       * @example cy.login()
+       * @example cy.login('user@example.com', 'password123')
+       */
+      login(email?: string, password?: string): Chainable<void>;
+
+      /**
+       * Custom command to logout a user
+       * @example cy.logout()
+       */
+      logout(): Chainable<void>;
+
+      /**
+       * Custom command to check if user is authenticated
+       * @example cy.shouldBeAuthenticated()
+       */
+      shouldBeAuthenticated(): Chainable<void>;
+
+      /**
+       * Custom command to check if user is not authenticated
+       * @example cy.shouldNotBeAuthenticated()
+       */
+      shouldNotBeAuthenticated(): Chainable<void>;
+    }
+  }
+}
