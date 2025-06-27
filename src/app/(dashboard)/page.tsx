@@ -10,6 +10,7 @@ import { UserCard } from "@/components/dashboard/user-card";
 import { UserFormModal } from "@/components/dashboard/user-form-modal";
 import { Pagination } from "@/components/dashboard/pagination";
 import { AuthGuard } from "@/components/auth-guard";
+import { ModeToggle } from "@/components/ui/theme-toggler";
 
 export default function DashboardPage() {
   console.log("🏠 Dashboard Page rendering:", new Date().toISOString());
@@ -54,20 +55,21 @@ export default function DashboardPage() {
 
   return (
     <AuthGuard requireAuth={true}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <h1 className="text-lg font-semibold text-gray-900">
+                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
                   User Management Dashboard
                 </h1>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   Welcome, {profile?.firstName || email || "Admin"}
                 </span>
+                <ModeToggle />
                 <Button
                   onClick={handleSignOut}
                   disabled={signOutMutation.isPending}
@@ -95,19 +97,25 @@ export default function DashboardPage() {
                     <div className="text-2xl font-bold text-blue-600">
                       {usersData?.total || 0}
                     </div>
-                    <div className="text-sm text-gray-600">Total Users</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Users
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
                       {currentPage}
                     </div>
-                    <div className="text-sm text-gray-600">Current Page</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Current Page
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">
                       {totalPages}
                     </div>
-                    <div className="text-sm text-gray-600">Total Pages</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Pages
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -116,7 +124,9 @@ export default function DashboardPage() {
 
           {/* Actions */}
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Users</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Users
+            </h2>
             <Button onClick={() => setIsCreateModalOpen(true)}>
               Add New User
             </Button>
@@ -132,7 +142,9 @@ export default function DashboardPage() {
           {/* Empty State */}
           {users.length === 0 && (
             <div className="text-center py-12">
-              <div className="text-gray-500 text-lg">No users found</div>
+              <div className="text-gray-500 dark:text-gray-400 text-lg">
+                No users found
+              </div>
               <Button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="mt-4"
