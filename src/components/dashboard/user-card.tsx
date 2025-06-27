@@ -44,18 +44,22 @@ export const UserCard = ({ user }: UserCardProps) => {
               height={48}
             />
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
+              <h3 className="text-lg font-semibold truncate">
                 {user.first_name} {user.last_name}
               </h3>
-              <p className="text-sm text-gray-500 truncate">{user.email}</p>
+              <p className="text-sm text-muted-foreground truncate">
+                {user.email}
+              </p>
+            </div>
+
+            <div className="text-xs text-muted-foreground self-start">
+              ID: {user.id}
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="pt-0">
           <div className="flex flex-col space-y-2">
-            <div className="text-xs text-gray-500">ID: {user.id}</div>
-
             <div className="flex space-x-2 pt-2">
               <Button
                 variant="outline"
