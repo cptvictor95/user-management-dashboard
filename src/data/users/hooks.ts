@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import {
   getUsers,
   getUser,
@@ -15,65 +14,15 @@ import type {
   UsersListResponse,
   UserResponse,
 } from "./schemas";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 // Hook for fetching users list with pagination
 export const useUsers = (page: number = 1) => {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: ["users", page],
-    queryFn: async () => {
-      try {
-        return await getUsers(page);
-      } catch (error) {
-        // Handle case where API doesn't have the page (e.g., page 3 when API only has 12 users)
-        // Check if this page should exist based on local cache data
-        const page1Data = queryClient.getQueryData<UsersListResponse>([
-          "users",
-          1,
-        ]);
-
-        if (page1Data) {
-          const totalPages = Math.ceil(page1Data.total / 6);
-
-          // If this page should exist based on our local data but API call failed
-          if (page <= totalPages && page > 2) {
-            // This is likely page 3 with locally created users
-            // We need to construct what page 3 should look like
-
-            // For the specific case of going from 12->13 users:
-            // Page 3 should have the last user from the original 12 users
-            // That would be user with ID 12 from the original API data
-
-            // We'll create a fallback response structure
-            // For page 3 when going from 12->13 users, we need to put the "overflow" user
-            // Let's check if we can get the user that should be on page 3
-
-            const page2Data = queryClient.getQueryData<UsersListResponse>([
-              "users",
-              2,
-            ]);
-            let page3Users: User[] = [];
-
-            if (page2Data && page2Data.data.length === 6) {
-              // If page 2 has 6 users, the last one should move to page 3
-              page3Users = [page2Data.data[5]];
-            }
-
-            return {
-              page,
-              per_page: 6,
-              total: page1Data.total,
-              total_pages: totalPages,
-              data: page3Users,
-            };
-          }
-        }
-
-        throw error; // Re-throw for genuine errors
-      }
-    },
+    queryFn: () => getUsers(page),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: (previousData) => previousData, // Keep previous data while loading new page
   });
 };
 
@@ -108,9 +57,7 @@ export const useCreateUser = () => {
         )}&background=random&color=fff&size=256`,
       };
 
-      // Update all users queries to include the new user
-      // Strategy: Add new user to page 1, and handle the cascade effect properly
-
+      // Get page 1 data to update
       const page1Data = queryClient.getQueryData<UsersListResponse>([
         "users",
         1,
@@ -118,69 +65,78 @@ export const useCreateUser = () => {
       if (page1Data) {
         const newTotal = page1Data.total + 1;
         const newTotalPages = Math.ceil(newTotal / 6);
-        const oldTotalPages = page1Data.total_pages;
 
-        // If we're creating a new page (going from 2 pages to 3 pages)
-        if (newTotalPages > oldTotalPages) {
-          // The scenario: originally 12 users (2 pages), now 13 users (3 pages)
-          // We need to make sure page 3 has the last user when accessed
+        // Add new user to the beginning of page 1, remove the last user if page is full
+        const updatedUsers = [newUser, ...page1Data.data];
+        const page1Users = updatedUsers.slice(0, 6); // Keep only first 6 users on page 1
+        const overflowUser = updatedUsers.length > 6 ? updatedUsers[6] : null;
 
-          // For this specific case where we go from 12->13 users (2->3 pages):
-          // Page 1: [newUser, users 1-5] (6 users)
-          // Page 2: [users 6-11] (6 users)
-          // Page 3: [user 12] (1 user)
+        // Update page 1 with new user
+        queryClient.setQueryData<UsersListResponse>(["users", 1], {
+          ...page1Data,
+          data: page1Users,
+          total: newTotal,
+          total_pages: newTotalPages,
+        });
 
-          // Update page 1: add new user, keep first 5 original users
-          queryClient.setQueryData<UsersListResponse>(["users", 1], {
-            ...page1Data,
-            data: [newUser, ...page1Data.data.slice(0, 5)],
-            total: newTotal,
-            total_pages: newTotalPages,
-          });
-
-          // Update page 2 if cached: shift users but keep 6 users
+        // If there's an overflow user and we need to update page 2
+        if (overflowUser) {
           const page2Data = queryClient.getQueryData<UsersListResponse>([
             "users",
             2,
           ]);
           if (page2Data) {
-            const userMovedToPage3 = page2Data.data[5]; // Last user from page 2 moves to page 3
+            // Add overflow user to beginning of page 2, remove last user if needed
+            const updatedPage2Users = [overflowUser, ...page2Data.data];
+            const page2Users = updatedPage2Users.slice(0, 6);
+            const page2OverflowUser =
+              updatedPage2Users.length > 6 ? updatedPage2Users[6] : null;
+
             queryClient.setQueryData<UsersListResponse>(["users", 2], {
               ...page2Data,
-              data: [page1Data.data[5], ...page2Data.data.slice(0, 5)], // Get 6th user from page 1, keep first 5 from page 2
+              data: page2Users,
               total: newTotal,
               total_pages: newTotalPages,
             });
 
-            // Create page 3 with the user that was pushed from page 2
-            if (userMovedToPage3) {
-              queryClient.setQueryData<UsersListResponse>(["users", 3], {
-                page: 3,
-                per_page: 6,
-                total: newTotal,
-                total_pages: newTotalPages,
-                data: [userMovedToPage3],
-              });
+            // Handle page 3 if needed
+            if (page2OverflowUser && newTotalPages > 2) {
+              const page3Data = queryClient.getQueryData<UsersListResponse>([
+                "users",
+                3,
+              ]);
+              if (page3Data) {
+                const updatedPage3Users = [
+                  page2OverflowUser,
+                  ...page3Data.data,
+                ];
+                queryClient.setQueryData<UsersListResponse>(["users", 3], {
+                  ...page3Data,
+                  data: updatedPage3Users.slice(0, 6),
+                  total: newTotal,
+                  total_pages: newTotalPages,
+                });
+              } else {
+                // Create page 3 if it doesn't exist
+                queryClient.setQueryData<UsersListResponse>(["users", 3], {
+                  page: 3,
+                  per_page: 6,
+                  total: newTotal,
+                  total_pages: newTotalPages,
+                  data: [page2OverflowUser],
+                });
+              }
             }
           }
-        } else {
-          // Normal case: just add user to page 1 and update totals
-          queryClient.setQueryData<UsersListResponse>(["users", 1], {
-            ...page1Data,
-            data: [newUser, ...page1Data.data.slice(0, 5)],
-            total: newTotal,
-            total_pages: newTotalPages,
-          });
         }
 
-        // Update any other cached pages to reflect new totals
+        // Update total_pages for any other cached pages
         for (let pageNum = 2; pageNum <= newTotalPages; pageNum++) {
           const pageData = queryClient.getQueryData<UsersListResponse>([
             "users",
             pageNum,
           ]);
-          if (pageData && pageNum !== 3) {
-            // Don't override page 3 if we just created it
+          if (pageData) {
             queryClient.setQueryData<UsersListResponse>(["users", pageNum], {
               ...pageData,
               total: newTotal,
@@ -189,10 +145,6 @@ export const useCreateUser = () => {
           }
         }
       }
-
-      // Don't invalidate queries to prevent the newly created user from disappearing
-      // Since we're using a mock API (ReqRes), the created user won't persist on the server
-      // So we rely on optimistic updates to maintain the user in the local cache
     },
     onError: (error) => {
       console.error("Create user failed:", error);
@@ -358,24 +310,44 @@ export const useDeleteUser = () => {
 
 // Hook for pagination state management
 export const usePagination = (initialPage: number = 1) => {
-  const [currentPage, setCurrentPage] = useState(initialPage);
+  // Use URL search params for pagination state
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Get current page from URL, fallback to initialPage
+  const currentPage = parseInt(
+    searchParams.get("page") || initialPage.toString(),
+    10
+  );
 
   const goToPage = (page: number) => {
-    setCurrentPage(page);
+    const params = new URLSearchParams(searchParams.toString());
+    if (page === 1) {
+      // Remove page param for page 1 to keep URL clean
+      params.delete("page");
+    } else {
+      params.set("page", page.toString());
+    }
+
+    const newUrl = params.toString()
+      ? `${pathname}?${params.toString()}`
+      : pathname;
+    router.push(newUrl);
   };
 
   const nextPage = () => {
-    setCurrentPage((prev) => prev + 1);
+    goToPage(currentPage + 1);
   };
 
   const prevPage = () => {
-    setCurrentPage((prev) => Math.max(1, prev - 1));
+    goToPage(Math.max(1, currentPage - 1));
   };
 
   // Function to adjust current page if it no longer exists
   const adjustPageIfNeeded = (totalPages: number) => {
     if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
+      goToPage(totalPages);
     }
   };
 
