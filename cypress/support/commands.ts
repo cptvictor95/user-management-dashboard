@@ -1,13 +1,46 @@
 /// <reference types="cypress" />
-// ***********************************************
-// This example commands.ts shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
+
+// Export to make this a module and fix global scope issues
+export {};
+
+// Type definitions for custom commands
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Cypress {
+    interface Chainable<Subject> {
+      /**
+       * Custom command for quick login and navigation to dashboard
+       * @example cy.loginAndVisitDashboard()
+       */
+      loginAndVisitDashboard(): Chainable<Subject>;
+
+      /**
+       * Custom command to login a user with session support
+       * @example cy.login()
+       * @example cy.login('user@example.com', 'password123')
+       */
+      login(email?: string, password?: string): Chainable<Subject>;
+
+      /**
+       * Custom command to logout a user
+       * @example cy.logout()
+       */
+      logout(): Chainable<Subject>;
+
+      /**
+       * Custom command to check if user is authenticated
+       * @example cy.shouldBeAuthenticated()
+       */
+      shouldBeAuthenticated(): Chainable<Subject>;
+
+      /**
+       * Custom command to check if user is not authenticated
+       * @example cy.shouldNotBeAuthenticated()
+       */
+      shouldNotBeAuthenticated(): Chainable<Subject>;
+    }
+  }
+}
 
 // Custom command for quick login to dashboard
 Cypress.Commands.add("loginAndVisitDashboard", () => {
@@ -19,10 +52,10 @@ Cypress.Commands.add("loginAndVisitDashboard", () => {
   cy.contains("User Management Dashboard").should("be.visible");
 });
 
-// Custom command for login
+// Custom command for login with session support
 Cypress.Commands.add(
   "login",
-  (email = "eve.holt@reqres.in", password = "cityslicka") => {
+  (email: string = "eve.holt@reqres.in", password: string = "cityslicka") => {
     cy.session([email, password], () => {
       cy.visit("/sign-in");
       cy.get('input[type="email"]').type(email);
@@ -55,35 +88,3 @@ Cypress.Commands.add("shouldNotBeAuthenticated", () => {
   cy.visit("/");
   cy.url().should("include", "/sign-in");
 });
-
-// Type definitions for custom commands
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      /**
-       * Custom command to login a user
-       * @example cy.login()
-       * @example cy.login('user@example.com', 'password123')
-       */
-      login(email?: string, password?: string): Chainable<void>;
-
-      /**
-       * Custom command to logout a user
-       * @example cy.logout()
-       */
-      logout(): Chainable<void>;
-
-      /**
-       * Custom command to check if user is authenticated
-       * @example cy.shouldBeAuthenticated()
-       */
-      shouldBeAuthenticated(): Chainable<void>;
-
-      /**
-       * Custom command to check if user is not authenticated
-       * @example cy.shouldNotBeAuthenticated()
-       */
-      shouldNotBeAuthenticated(): Chainable<void>;
-    }
-  }
-}

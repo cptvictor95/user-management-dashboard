@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useAuth } from "@/data/auth/provider";
 import { useSignOut } from "@/data/auth/hooks";
 import { useUsers, usePagination } from "@/data/users/hooks";
@@ -17,14 +17,25 @@ function DashboardContent() {
 
   const { email, profile, isAuthenticated, token } = useAuth();
   const signOutMutation = useSignOut();
-  const { currentPage, goToPage, nextPage, prevPage, adjustPageIfNeeded } =
-    usePagination(1);
+
+  // Initialize pagination to get current page
+  const initialPagination = usePagination(1);
+
+  // Get users data using current page
   const {
     data: usersData,
     isLoading,
     error,
     isPlaceholderData,
-  } = useUsers(currentPage);
+  } = useUsers(initialPagination.currentPage);
+
+  const totalPages = usersData?.total_pages || 1;
+
+  // Get enhanced pagination with total pages for auto-adjustment
+  const { currentPage, goToPage, nextPage, prevPage } = usePagination(
+    1,
+    totalPages
+  );
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -41,12 +52,6 @@ function DashboardContent() {
   };
 
   const users = usersData?.data || [];
-  const totalPages = usersData?.total_pages || 1;
-
-  // Adjust current page if it no longer exists (e.g., after deletion)
-  useEffect(() => {
-    adjustPageIfNeeded(totalPages);
-  }, [totalPages, adjustPageIfNeeded]);
 
   // Only show full page loading on initial load (when there's no data at all)
   if (isLoading && !usersData) {

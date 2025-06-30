@@ -38,8 +38,10 @@ describe("User Management - Delete User", () => {
       cy.contains("button", "Delete").first().click();
       cy.contains("Delete User").should("be.visible");
 
-      // Confirm deletion
-      cy.contains("button", "Delete").click();
+      // Confirm deletion - target the confirmation button inside the dialog
+      cy.get('[data-slot="alert-dialog-content"]')
+        .contains("button", "Delete")
+        .click();
 
       // Check loading state
       cy.contains("Deleting...").should("be.visible");
@@ -59,8 +61,10 @@ describe("User Management - Delete User", () => {
       cy.contains("button", "Delete").first().click();
       cy.contains("Delete User").should("be.visible");
 
-      // Confirm deletion
-      cy.contains("button", "Delete").click();
+      // Confirm deletion - target the confirmation button inside the dialog
+      cy.get('[data-slot="alert-dialog-content"]')
+        .contains("button", "Delete")
+        .click();
 
       // Check loading state
       cy.contains("Deleting...").should("be.visible");
@@ -75,7 +79,11 @@ describe("User Management - Delete User", () => {
       // Delete first user
       cy.contains("button", "Delete").first().click();
       cy.contains("Delete User").should("be.visible");
-      cy.contains("button", "Delete").click();
+
+      // Confirm deletion - target the confirmation button inside the dialog
+      cy.get('[data-slot="alert-dialog-content"]')
+        .contains("button", "Delete")
+        .click();
 
       // Wait for dialog to close
       cy.contains("Delete User").should("not.exist");
@@ -89,7 +97,11 @@ describe("User Management - Delete User", () => {
             // Click the second Delete button
             cy.get("button").contains("Delete").eq(1).click();
             cy.contains("Delete User").should("be.visible");
-            cy.contains("button", "Delete").click();
+
+            // Confirm deletion - target the confirmation button inside the dialog
+            cy.get('[data-slot="alert-dialog-content"]')
+              .contains("button", "Delete")
+              .click();
 
             cy.contains("Delete User").should("not.exist");
             cy.contains("User Management Dashboard").should("be.visible");
@@ -112,8 +124,10 @@ describe("User Management - Delete User", () => {
       cy.contains("button", "Delete").first().click();
       cy.contains("Delete User").should("be.visible");
 
-      // Confirm deletion
-      cy.contains("button", "Delete").click();
+      // Confirm deletion - target the confirmation button inside the dialog
+      cy.get('[data-slot="alert-dialog-content"]')
+        .contains("button", "Delete")
+        .click();
 
       // Delete button should be disabled during loading
       cy.contains("Deleting...").should("be.disabled");
