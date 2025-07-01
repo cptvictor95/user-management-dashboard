@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/data/auth/provider";
 import { useSignOut } from "@/data/auth/hooks";
 import { useUsers, usePagination } from "@/data/users/hooks";
+import type { User } from "@/data/users/schemas";
 import { Button } from "@/components/ui/button";
 import { UserCard } from "@/components/dashboard/user-card";
 import { UserFormModal } from "@/components/dashboard/user-form-modal";
@@ -16,9 +17,23 @@ export default function Home() {
 
   const { email, profile, isAuthenticated, token } = useAuth();
   const signOutMutation = useSignOut();
-  const { currentPage, goToPage, nextPage, prevPage, adjustPageIfNeeded } =
-    usePagination(1);
-  const { data: usersData, isLoading, error } = useUsers(currentPage);
+
+  // Initialize pagination to get current page
+  const initialPagination = usePagination(1);
+
+  // Get users data using current page
+  const {
+    data: usersData,
+    isLoading,
+    error,
+  } = useUsers(initialPagination.currentPage);
+  const totalPages = usersData?.total_pages || 1;
+
+  // Get enhanced pagination with total pages for auto-adjustment
+  const { currentPage, goToPage, nextPage, prevPage } = usePagination(
+    1,
+    totalPages
+  );
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -33,12 +48,6 @@ export default function Home() {
   const handleSignOut = () => {
     signOutMutation.mutate();
   };
-  const totalPages = usersData?.total_pages || 1;
-
-  // Adjust current page if it no longer exists (e.g., after deletion)
-  useEffect(() => {
-    adjustPageIfNeeded(totalPages);
-  }, [totalPages, adjustPageIfNeeded]);
 
   if (isLoading) {
     return (
@@ -108,7 +117,7 @@ export default function Home() {
 
           {/* Users Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {users.map((user) => (
+            {users.map((user: User) => (
               <UserCard key={user.id} user={user} />
             ))}
           </div>
