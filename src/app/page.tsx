@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/data/auth/provider";
 import { useSignOut } from "@/data/auth/hooks";
 import { useUsers, usePagination } from "@/data/users/hooks";
@@ -11,13 +11,14 @@ import { UserFormModal } from "@/components/dashboard/user-form-modal";
 import { Pagination } from "@/components/dashboard/pagination";
 import { AuthGuard } from "@/components/auth-guard";
 import { ThemeToggler } from "@/components/ui/theme-toggler";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   console.log("🏠 Dashboard Page rendering:", new Date().toISOString());
 
   const { email, profile, isAuthenticated, token } = useAuth();
   const signOutMutation = useSignOut();
-
+  const router = useRouter();
   // Initialize pagination to get current page
   const initialPagination = usePagination(1);
 
@@ -48,6 +49,12 @@ export default function Home() {
   const handleSignOut = () => {
     signOutMutation.mutate();
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/sign-in");
+    }
+  }, [isAuthenticated, router]);
 
   if (isLoading) {
     return (

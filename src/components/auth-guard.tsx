@@ -19,26 +19,28 @@ export const AuthGuard = ({ children, requireAuth = true }: AuthGuardProps) => {
     );
   }
 
-  // If auth is required but user is not authenticated, show loading
-  // (middleware will handle the actual redirect)
+  // Since middleware handles all redirects, we can trust that if we reach this point,
+  // the user should have access to the page. However, we still check for edge cases
+  // during the brief moment before potential redirects take effect.
+
   if (requireAuth && !isAuthenticated) {
+    // This should rarely be seen since middleware redirects unauthenticated users
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Redirecting...</div>
+        <div className="text-lg">Redirecting to sign-in...</div>
       </div>
     );
   }
 
-  // If auth is not required but user is authenticated, show loading
-  // (middleware will handle the actual redirect)
   if (!requireAuth && isAuthenticated) {
+    // This should rarely be seen since middleware redirects authenticated users away from auth pages
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Redirecting...</div>
+        <div className="text-lg">Redirecting to dashboard...</div>
       </div>
     );
   }
 
-  // Render children if auth state matches requirements
+  // Render children - middleware ensures we only reach this point when appropriate
   return <>{children}</>;
 };
