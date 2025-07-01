@@ -25,10 +25,11 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Get server-side auth session
+  // Get server-side auth session for hydration purposes
+  // Middleware handles all authentication redirects
   const session = await getAuthSession();
 
-  console.log("🏗️ Root Layout - Server auth check:", {
+  console.log("🏗️ Root Layout - Providing auth session for hydration:", {
     hasSession: !!session,
     email: session?.email,
     timestamp: new Date().toISOString(),

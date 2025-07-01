@@ -3,32 +3,50 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const authToken = request.cookies.get("auth_token")?.value;
-  const isAuthenticated = !!authToken;
+  const userEmail = request.cookies.get("user_email")?.value;
+  const isAuthenticated = !!(authToken && userEmail);
+
+  const { pathname } = request.nextUrl;
 
   console.log("🚦 Middleware:", {
-    pathname: request.nextUrl.pathname,
+    pathname,
     isAuthenticated,
     hasToken: !!authToken,
+    hasEmail: !!userEmail,
     token: authToken ? authToken.substring(0, 10) + "..." : "none",
-    allCookies: request.cookies.toString(),
     timestamp: new Date().toISOString(),
   });
 
-  const isAuthPage = request.nextUrl.pathname.startsWith("/sign-");
-  const isDashboard =
-    request.nextUrl.pathname === "/" ||
-    request.nextUrl.pathname.startsWith("/dashboard");
+  // Define route types
+  const isAuthPage = pathname.startsWith("/sign-");
+  const isProtectedRoute =
+    pathname === "/" || pathname.startsWith("/dashboard");
 
-  // If user is authenticated and trying to access auth pages, redirect to dashboard
-  if (isAuthenticated && isAuthPage) {
-    console.log("Redirecting authenticated user from auth page to dashboard");
-    return NextResponse.redirect(new URL("/", request.url));
+  // Handle authenticated users
+  if (isAuthenticated) {
+    // Redirect authenticated users away from auth pages to dashboard
+    if (isAuthPage) {
+      console.log(
+        "🚦 Redirecting authenticated user from auth page to dashboard"
+      );
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    // Allow access to protected routes
+    return NextResponse.next();
   }
 
-  // If user is not authenticated and trying to access protected pages, redirect to sign-in
-  if (!isAuthenticated && isDashboard) {
-    console.log("Redirecting unauthenticated user to sign-in");
-    return NextResponse.redirect(new URL("/sign-in", request.url));
+  // Handle unauthenticated users
+  if (!isAuthenticated) {
+    // Allow access to auth pages
+    if (isAuthPage) {
+      return NextResponse.next();
+    }
+
+    // Redirect unauthenticated users from protected routes to sign-in
+    if (isProtectedRoute) {
+      console.log("🚦 Redirecting unauthenticated user to sign-in");
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
   }
 
   return NextResponse.next();
