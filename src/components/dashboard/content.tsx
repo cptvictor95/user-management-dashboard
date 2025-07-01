@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, Suspense } from "react";
 import { useAuth } from "@/data/auth/provider";
 import { useSignOut } from "@/data/auth/hooks";
 import { useUsers, usePagination } from "@/data/users/hooks";
@@ -9,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserCard } from "@/components/dashboard/user-card";
 import { UserFormModal } from "@/components/dashboard/user-form-modal";
 import { Pagination } from "@/components/dashboard/pagination";
-import { AuthGuard } from "@/components/auth-guard";
-import { ThemeToggler } from "@/components/ui/theme-toggler";
+import { useState } from "react";
+import { ThemeToggler } from "../ui/theme-toggler";
 
-function DashboardContent() {
+export const Content = () => {
   console.log("🏠 Dashboard Page rendering:", new Date().toISOString());
 
   const { email, profile, isAuthenticated, token } = useAuth();
@@ -203,20 +202,4 @@ function DashboardContent() {
       />
     </div>
   );
-}
-
-export default function DashboardPage() {
-  return (
-    <AuthGuard requireAuth={true}>
-      <Suspense
-        fallback={
-          <div className="flex min-h-screen items-center justify-center">
-            <div className="text-lg">Loading dashboard...</div>
-          </div>
-        }
-      >
-        <DashboardContent />
-      </Suspense>
-    </AuthGuard>
-  );
-}
+};
