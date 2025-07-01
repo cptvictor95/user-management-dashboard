@@ -60,6 +60,12 @@ export default function SignInPage() {
             <p className="mt-2 text-sm">
               Welcome! Please enter your details to continue.
             </p>
+            <p className="mt-2 text-sm">
+              If you just wanna test the app, you can use the following email
+              and password:
+            </p>
+            <p className="mt-2 text-sm">Email: eve.holt@reqres.in</p>
+            <p className="mt-2 text-sm">Password: pistol</p>
           </div>
 
           <div className="py-8 px-6 shadow-sm rounded-lg border">
